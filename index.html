@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Expense &amp; Budget Visualizer</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="shell">
+    <!-- Top Bar -->
+    <header class="app-nav">
+      <div class="nav-brand">
+        <span class="brand-glyph"></span>
+        <span class="brand-title">FlowExpense</span>
+        <span class="brand-pill">Local</span>
+      </div>
+      <div class="nav-actions">
+        <button id="theme-toggle" class="icon-btn theme-toggle" type="button" aria-label="Toggle theme">
+          <svg class="sun-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <svg class="moon-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Notification Banner -->
+    <div id="banner" class="banner hidden" role="alert" aria-live="polite">
+      <div class="banner-body">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span id="banner-message"></span>
+      </div>
+      <button id="banner-close" class="banner-dismiss" type="button" aria-label="Dismiss">&times;</button>
+    </div>
+
+    <!-- Main Workspace -->
+    <main class="content-flow">
+      <!-- Balance & Budget Monitor -->
+      <section class="panel balance-panel" id="balance-card">
+        <div class="panel-head">
+          <span class="subheading">Total Balance</span>
+          <span id="limit-badge" class="status-pill status-danger hidden">Limit Exceeded</span>
+        </div>
+        
+        <div class="balance-hero">
+          <span class="balance-figure" id="total-balance">$0.00</span>
+        </div>
+
+        <div class="budget-tracker">
+          <div class="tracker-header">
+            <span class="tracker-label">Monthly Spending Limit</span>
+            <span id="budget-progress-text" class="tracker-percent">No limit set</span>
+          </div>
+          <div class="progress-track" aria-hidden="true">
+            <div id="budget-progress-bar" class="progress-fill" style="width: 0%;"></div>
+          </div>
+          <div class="limit-input-cluster">
+            <div class="input-with-affix">
+              <span class="affix">$</span>
+              <input 
+                type="number" 
+                id="spending-limit" 
+                class="affix-input" 
+                placeholder="0.00" 
+                min="0" 
+                step="any"
+                aria-label="Spending limit amount"
+              >
+            </div>
+            <button id="clear-limit-btn" class="btn-ghost" type="button">Reset</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- New Transaction Panel -->
+      <section class="panel">
+        <div class="panel-head">
+          <span class="panel-title">Add Expense</span>
+        </div>
+
+        <form id="transaction-form" class="transaction-form" novalidate>
+          <div class="field">
+            <label for="item-name" class="field-label">Description</label>
+            <input 
+              type="text" 
+              id="item-name" 
+              name="name" 
+              class="field-input" 
+              placeholder="e.g. Flight ticket, Groceries" 
+              autocomplete="off"
+            >
+            <span id="error-name" class="field-error" aria-live="polite"></span>
+          </div>
+
+          <div class="form-grid-duo">
+            <div class="field">
+              <label for="item-amount" class="field-label">Amount</label>
+              <div class="input-with-affix">
+                <span class="affix">$</span>
+                <input 
+                  type="number" 
+                  id="item-amount" 
+                  name="amount" 
+                  class="affix-input" 
+                  placeholder="0.00" 
+                  min="0.01" 
+                  step="any"
+                >
+              </div>
+              <span id="error-amount" class="field-error" aria-live="polite"></span>
+            </div>
+
+            <div class="field">
+              <label for="item-category" class="field-label">Category</label>
+              <div class="select-wrapper">
+                <select id="item-category" name="category" class="field-select">
+                  <option value="" disabled selected>Select category</option>
+                  <option value="Food">Food</option>
+                  <option value="Transport">Transport</option>
+                  <option value="Fun">Fun</option>
+                </select>
+                <svg class="select-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </div>
+              <span id="error-category" class="field-error" aria-live="polite"></span>
+            </div>
+          </div>
+
+          <!-- Quick Category Segments for fast mobile tapping -->
+          <div class="category-chips" role="group" aria-label="Quick Category Selection">
+            <button type="button" class="chip-btn" data-cat="Food">
+              <span class="chip-dot dot-food"></span>Food
+            </button>
+            <button type="button" class="chip-btn" data-cat="Transport">
+              <span class="chip-dot dot-transport"></span>Transport
+            </button>
+            <button type="button" class="chip-btn" data-cat="Fun">
+              <span class="chip-dot dot-fun"></span>Fun
+            </button>
+          </div>
+
+          <button type="submit" class="btn-solid" id="btn-submit">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>Record Expense</span>
+          </button>
+        </form>
+      </section>
+
+      <!-- Category Breakdown Chart -->
+      <section class="panel chart-panel">
+        <div class="panel-head">
+          <span class="panel-title">Allocation</span>
+          <span id="chart-total-sub" class="panel-subtitle">By category</span>
+        </div>
+
+        <div class="chart-stage">
+          <div class="chart-canvas-box">
+            <canvas id="category-chart" aria-label="Category allocation donut chart" role="img"></canvas>
+          </div>
+
+          <div id="chart-empty" class="state-empty">
+            <div class="empty-glyph">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M12 2a10 10 0 0 1 10 10"></path>
+              </svg>
+            </div>
+            <p class="empty-caption">No expenses recorded yet</p>
+          </div>
+
+          <div id="chart-error" class="state-empty hidden">
+            <p class="empty-caption">Chart unavailable &bull; tracking still active</p>
+          </div>
+        </div>
+
+        <!-- Custom clean legend with percentages -->
+        <div id="chart-legend-metrics" class="legend-grid">
+          <div class="legend-col" data-cat="Food">
+            <div class="legend-head"><span class="chip-dot dot-food"></span>Food</div>
+            <span class="legend-val" id="legend-val-food">$0.00</span>
+          </div>
+          <div class="legend-col" data-cat="Transport">
+            <div class="legend-head"><span class="chip-dot dot-transport"></span>Transport</div>
+            <span class="legend-val" id="legend-val-transport">$0.00</span>
+          </div>
+          <div class="legend-col" data-cat="Fun">
+            <div class="legend-head"><span class="chip-dot dot-fun"></span>Fun</div>
+            <span class="legend-val" id="legend-val-fun">$0.00</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Activity / Transaction List -->
+      <section class="panel list-panel">
+        <div class="panel-head">
+          <div class="head-with-count">
+            <span class="panel-title">Transactions</span>
+            <span id="tx-count" class="count-badge">0</span>
+          </div>
+          <div class="sort-toolbar">
+            <label for="sort-select" class="visually-hidden">Sort by</label>
+            <select id="sort-select" class="sort-inline-select">
+              <option value="newest">Recent first</option>
+              <option value="amount">Highest amount</option>
+              <option value="category">Category</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="transactions-scroll-area">
+          <ul id="transactions-list" class="activity-feed" aria-label="Transactions list"></ul>
+          <div id="list-empty" class="state-empty">
+            <p class="empty-caption">No transactions added</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="app-bottom">
+      <span>FlowExpense &bull; Client-side storage</span>
+    </footer>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
